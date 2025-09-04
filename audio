@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroCalm Sessions</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .session-player {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            padding: 15px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .session-player h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Soul Tribe NeuroCalm Sessions</h1>
+
+    <!-- Session 1 -->
+    <div class="session-player">
+        <h3>Session 1: Finding Your Calm</h3>
+        <audio controls>
+            <source src="/audio/session_1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <!-- Session 2 -->
+    <div class="session-player">
+        <h3>Session 2: Deepening Relaxation</h3>
+        <audio controls>
+            <source src="/audio/session_2.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <!-- Add more sessions by copying the div above -->
+    <!-- Session 3 -->
+    <div class="session-player">
+        <h3>Session 3: Releasing Daily Stress</h3>
+        <audio controls>
+            <source src="/audio/session_3.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <!-- ... and so on for all 21 sessions ... -->
+
+</body>
+</html>
