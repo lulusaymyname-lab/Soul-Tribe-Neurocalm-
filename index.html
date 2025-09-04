@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroCalm: The Emotional Freedom App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1a202c;
+        }
+
+        .scroll-container {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .font-lora {
+            font-family: 'Lora', serif;
+        }
+
+        /* Custom style for disabled audio player */
+        audio:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let journalCollectionRef = null;
+
+        const landingPage = document.getElementById('landingPage');
+        const coursePage = document.getElementById('coursePage');
+        const journalPage = document.getElementById('journalPage');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const startCourseBtn = document.getElementById('startCourseBtn');
+        const courseProgress = document.getElementById('courseProgress');
+        const courseScript = document.getElementById('courseScript');
+        const courseAudioPlayer = document.getElementById('courseAudioPlayer');
+        const audioStatus = document.getElementById('audioStatus');
+        const nextSessionBtn = document.getElementById('nextSessionBtn');
+        const courseModuleTitle = document.getElementById('courseModuleTitle');
+        const courseSessionTitle = document.getElementById('courseSessionTitle');
+        const navHome = document.getElementById('navHome');
+        const navCourse = document.getElementById('navCourse');
+        const navJournal = document.getElementById('navJournal');
+
+        const journalEntryInput = document.getElementById('journalEntryInput');
+        const saveBtn = document.getElementById('saveBtn');
+        const journalEntriesContainer = document.getElementById('journalEntriesContainer');
+        const messageModal = document.getElementById('messageModal');
+        const messageText = document.getElementById('messageText');
+        const messageCloseBtn = document.getElementById('messageCloseBtn');
+
+        let currentModuleIndex = 0;
+        let currentSessionIndex = 0;
+        let audioUrlCache = {}; // Cache for generated audio URLs
+
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+
+        messageCloseBtn.onclick = () => {
+            messageModal.classList.add('hidden');
+        };
+
+        function formatDate(timestamp) {
+            const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        function renderJournalEntries(entries) {
+            journalEntriesContainer.innerHTML = '';
+            if (entries.length === 0) {
+                journalEntriesContainer.innerHTML = '<p class="text-gray-400 text-center py-8">Your journal is empty. Write your first entry!</p>';
+                return;
+            }
+            entries.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'bg-white p-6 rounded-2xl shadow-md mb-4 hover:shadow-lg transition-shadow duration-300';
+                entryDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="text-lg font-semibold text-blue-600">${formatDate(entry.timestamp)}</h3>
+                        <p class="text-sm text-gray-500">ID: ${entry.id.substring(0, 8)}...</p>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">${entry.content}</p>
+                `;
+                journalEntriesContainer.appendChild(entryDiv);
+            });
+        }
+
+        const courseModules = [
+            {
+                title: 'Module 1: The Foundation of Calm',
+                sessions: [
+                    { title: 'Day 1: Welcome to NeuroCalm', content: `Welcome to your first step on the journey to emotional freedom. Take a moment to settle in, finding a comfortable position where you can relax. Close your eyes if you feel comfortable doing so, and simply bring your attention to your breath. Breathe in slowly through your nose... and out slowly through your mouth.\n\nToday, we're going to introduce the Havening Technique, a powerful tool for finding immediate calm. It works by creating a peaceful, soothing feeling that helps to de-link emotions from stressful memories. You can do this by gently touching your own arms, hands, or face. It's that simple.\n\nFor this first session, let's practice the "Quick Calm."\n\nBegin by gently and slowly stroking your palms. Move your hands from the wrist up to your fingertips, in a smooth, continuous motion. As you do this, notice the feeling of your palms. Feel the gentle pressure and the warmth. Breathe slowly and deeply. You might even feel a tingling sensation as you do this.\n\nNow, gently stroke the sides of your arms, from your shoulders down to your elbows. Notice the soft sensation on your skin. As you continue to breathe slowly, you are sending a signal of safety and comfort to your brain.\n\nFinally, gently massage your face, from your forehead down to your chin. Feel the soothing touch. This is a simple act of self-care that tells your nervous system it's okay to relax.\n\nThat's right. You're doing it perfectly. Continue for a moment longer.\n\nAnd now, slowly bring your hands to rest. Take one more deep, slow breath.\n\nYou can return to this simple practice whenever you feel the need for calm. It's always with you.\n\nBefore we end, please take a moment to reflect on your experience. Consider your emotional state before this session and how you feel now. You can write your thoughts in your journal.`},
+                    { title: 'Day 2: The Science of Touch', content: `Welcome back. Today, we're going to look at the science behind what you experienced yesterday.\n\nThe Havening Technique is what we call a psychosensory therapy. It uses therapeutic touch to help you feel safe and calm. When you perform this gentle, slow touch, it generates something called a delta wave in your brain. This delta wave is the same type of brain wave produced during deep sleep. This soothing sensation helps to lower your anxiety levels and reset your emotional state.\n\nThis gentle, soothing touch is a powerful way to communicate with your nervous system. In this session, we'll focus on the physical sensations of touch and how they help to quiet your mind.\n\nLet's begin by returning to that gentle, calming touch. Start by slowly stroking the tops of your hands, just like you did yesterday. This time, as you do it, really pay attention to the sensation. Notice the temperature of your skin, the feeling of your fingers gliding across it.\n\nNow, move to your upper arms and shoulders. Gently and slowly, stroke from your shoulders down to your elbows. If you feel any tension, simply acknowledge it without judgment. Let the touch be a comforting blanket, inviting that tension to soften and release.\n\nNow, gently massage your face again. Feel the connection between your hands and your face. This simple act is a powerful way to ground yourself in the present moment.\n\nBreathe slowly and deeply. You are not just doing a technique; you are actively caring for yourself.\n\nAnd now, slowly bring your hands to rest. Take a deep, gentle breath, and just be in this moment of peace.\n\nTake a moment to write in your journal. Where do you typically feel stress in your body? Was there a change in that feeling during this session?`},
+                    { title: 'Day 3: Releasing Daily Stress', content: `Hello again. We’ve learned how to find immediate calm and how the science of touch works. Today, let's apply that to a common feeling: the stress that builds up throughout your day.\n\nLet's begin. Find a comfortable position and place your hands on your forehead. Gently and slowly massage your forehead in circular motions, from the center outwards. Notice the feeling of your fingertips on your skin. Breathe deeply and gently.\n\nNow, bring your hands down to your temples and gently massage them. As you do this, imagine all the worries and pressures from your day melting away with each breath. Let go of the meetings, the deadlines, the to-do lists.\n\nFinally, gently stroke down the sides of your face, from your temples down to your jaw. Feel the tension in your jaw and cheeks release. Continue for a moment longer, breathing calmly.\n\nAnd now, slowly bring your hands to rest. Take a final deep, gentle breath.\n\nWhat was a source of stress today, and how did the session help you feel a sense of relief?`},
+                    { title: 'Day 4: Taming Anxiety', content: `Welcome back. Today, we're going to use the power of Havening to directly address feelings of anxiety. Remember, these are just feelings, and you have the power to soothe them.\n\nBegin by bringing your hands to your upper arms. Gently and slowly stroke from your shoulders down to your elbows. As you do this, gently close your eyes and bring to mind a recent situation that made you feel anxious, but one that is minor in intensity.\n\nNotice any thoughts or physical sensations that come up. Do not judge them. Just observe them. Now, as you continue the slow, gentle touch, repeat this mantra to yourself: "I am safe. I am calm. I am okay."\n\nContinue to stroke your arms. Breathe slowly and deeply. You are actively telling your nervous system that you are safe. Feel the soothing touch. Feel the fear soften.\n\nNow, move your hands to your face and gently massage your forehead, your temples, and your cheeks. Take another slow, gentle breath, and with it, release any remaining anxious thoughts.\n\nWhat is one thought or worry you can release today?`},
+                    { title: 'Day 5: The Anchor of Peace', content: `Welcome to a powerful new technique today: creating an emotional anchor. An anchor is a specific feeling or state that you can access on command. We're going to anchor the feeling of peace.\n\nBegin with a few deep, cleansing breaths. Inhale slowly... and exhale slowly.\n\nNow, bring to mind a memory of a time you felt completely at peace. Maybe it was on a tranquil beach, in a quiet forest, or even just in a peaceful moment at home. Remember the sights, the sounds, the smells, and most importantly, the feeling of that moment.\n\nNow, begin gently stroking your palms. As you do this, feel that feeling of peace. Let it wash over you. Stroke slowly and calmly. Imagine that this gentle touch is embedding that feeling of peace into your memory.\n\nNow, place your hand on your heart. Feel the warmth of your hand, the gentle rise and fall of your chest with each breath. Continue to feel that feeling of peace as you breathe.\n\nDescribe the feeling of being calm. What does it look like, sound like, feel like?`},
+                    { title: 'Day 6: Setting Intentions', content: `Welcome to your morning session. Today, we'll use Havening to set a positive intention for the day ahead.\n\nFind a quiet spot and begin by gently stroking your upper arms. As you do this, think about the day ahead. What is one positive feeling you want to experience today? Perhaps it's gratitude, calm, or confidence.\n\nAs you continue to stroke your arms, imagine that feeling. See yourself moving through your day with that emotion. Feel it in your body.\n\nNow, bring your hands to your face, gently massaging your cheeks and temples. Take a moment to say your intention out loud or in your mind, such as, "Today, I choose to be calm."\n\nBreathe that intention in, and with a gentle exhale, release any doubts or fears.\n\nWhat is one positive intention you will set for today?`},
+                    { title: 'Day 7: Consolidating Your Calm', content: `Congratulations on completing your first week! Today is a day to consolidate all the calm you’ve built.\n\nLet's begin with the full sequence we've learned this week. Start by gently stroking your upper arms, from your shoulders down to your elbows. Breathe slowly and deeply.\n\nNow, gently and slowly stroke your palms, feeling the calming sensation. Continue to breathe gently.\n\nFinally, gently massage your face, your forehead, and your temples. Feel the peace and calm you've cultivated.\n\nReflect on this past week. What changes have you noticed in your emotional state?`}
+                ]
+            },
+            {
+                title: 'Module 2: Reprogramming Your Mind',
+                sessions: [
+                    { title: 'Day 8: Identifying Triggers', content: `Welcome to Module 2. We're now moving from quick calm to lasting resilience. Today, we'll begin by identifying a specific, low-level trigger. This is a situation that causes a mild, predictable emotional response, like a feeling of annoyance or mild frustration.\n\nFind a comfortable position. Close your eyes and bring to mind a very small trigger from your past week. Maybe it was a frustrating email, a minor traffic delay, or a small social misstep. As you think about it, notice where you feel that feeling in your body.\n\nNow, begin gently stroking your arms. Continue to think of that trigger, but as you do, repeat this phrase: "It's not a threat. I am safe now."\n\nFeel the gentle, calming sensation of the touch as it helps to de-link the emotional response from the memory. Continue this until the feeling of frustration softens.\n\nWhat is a recurring emotional trigger you would like to address?`},
+                    { title: 'Day 9: The Memory Reconsolidation Principle', content: `Today, we'll deepen our understanding of how Havening works on memories. When you recall a memory, it becomes "unstable" for a brief period. This is when Havening can work its magic, helping to re-file the memory without the emotional charge.\n\nThink of a non-traumatic, negative memory from the past. Perhaps a moment of embarrassment or a small mistake. Now, begin gently and slowly stroking your palms. As you do, recall the memory. Notice any thoughts, feelings, or sensations that arise.\n\nNow, while continuing the stroking, gently say out loud, "I am safe and calm now." Repeat this phrase. You are creating a new memory path, one of safety and calm, that overrides the old, charged one.\n\nContinue for as long as it feels right. When you are done, recall the memory one more time. Notice how the emotional intensity has diminished.\n\nWhat is a negative memory that you want to release the emotional charge from?`},
+                    { title: 'Day 10: Releasing Self-Doubt', content: `Today, we begin a five-day series focused on specific emotional challenges. We'll start with the powerful and freeing feeling of releasing self-doubt.\n\nFind a quiet place and begin with slow, gentle strokes on your upper arms. As you do, bring to mind a recent time you felt self-doubt. Hear the voice of your inner critic. Do not argue with it. Just listen.\n\nNow, as you continue to stroke, imagine that voice is a radio station, and you are slowly turning the volume down. Repeat to yourself, "I am enough."\n\nNow, move your hands to your face and gently massage your forehead and temples. As you do, visualize a new, more supportive voice. Let it be kind and encouraging. Let it say, "You are worthy. You are capable."\n\nWhat is one limiting belief you are ready to let go of?`},
+                    { title: 'Day 11: Overcoming Procrastination', content: `Procrastination is often linked to a fear of failure or a feeling of being overwhelmed. Today, we'll use Havening to soothe that feeling.\n\nThink of one task you have been putting off. Notice the feeling of resistance or overwhelm. Now, gently stroke your arms. As you do, say a simple, positive affirmation: "I can do this."\n\nNow, break the task into three simple, manageable steps. As you stroke your palms, visualize yourself completing the first step. Feel the sense of accomplishment.\n\nWhat is one small step you can take today to move forward on a task you’ve been avoiding?`},
+                    { title: 'Day 12: Coping with Social Anxiety', content: `Feelings of social anxiety can be isolating. Today, we'll use Havening to help you feel more comfortable and confident in social settings.\n\nThink about a social event or conversation that makes you feel anxious. Bring that feeling to mind. Now, begin gently stroking your palms.\n\nAs you do, imagine a bubble of peace and safety around you. It protects you from judgment and fear. Within this bubble, you are free to be yourself.\n\nContinue to stroke your palms, breathing slowly, and repeat: "I am confident. I am comfortable. I am authentic."\n\nWhat is one thought you can replace your social anxiety with?`},
+                    { title: 'Day 13: Letting Go of Anger', content: `Anger can be a powerful and overwhelming emotion. Today, we will use Havening to safely release it.\n\nThink of a time when you felt angry. Notice where you feel it in your body. Now, gently and slowly stroke your arms. As you do, repeat a simple phrase: "I release this anger."\n\nContinue to stroke. Breathe deeply. With each breath, imagine the anger leaving your body, being replaced with a feeling of calm.\n\nHow can you use this technique the next time you feel a flash of anger?`},
+                    { title: 'Day 14: Healing from Disappointment', content: `Disappointment can feel heavy. Today, we'll use Havening to help you find a sense of peace and acceptance.\n\nBring to mind a recent disappointment. Feel the sadness or frustration. Now, gently stroke your palms. As you do, repeat: "This is a part of my story, but it does not define me."\n\nContinue to stroke, and with each exhale, let go of the emotional charge of the disappointment. Imagine a new, peaceful feeling taking its place.\n\nWhat is one lesson you can learn from a recent disappointment?`}
+                ]
+            },
+            {
+                title: 'Module 3: Building Lasting Resilience',
+                sessions: [
+                    { title: 'Day 15: Proactive Peace', content: `Welcome to Module 3, where we learn to build lasting resilience. Today, we’ll use Havening proactively, to prepare for a future event that might cause you stress.\n\nThink of a future event, like a presentation, a difficult conversation, or a family gathering. Notice any feelings of anxiety. Now, begin to gently stroke your arms.\n\nAs you do, visualize yourself in that situation, but this time, you are feeling calm and confident. See yourself navigating the event with ease. Feel the positive emotions.\n\nContinue to stroke your arms, and repeat: "I am prepared. I am capable. I can handle this."\n\nWhat future event are you feeling anxious about, and how did this session help?`},
+                    { title: 'Day 16: Building Confidence', content: `Confidence is not something you are born with; it's something you build. Today, we'll use Havening to strengthen your belief in yourself.\n\nThink of a time you felt successful and proud of yourself. It can be a small victory or a major accomplishment. Recall that feeling. Now, begin gently stroking your palms.\n\nAs you do, repeat to yourself, "I am strong. I am successful. I am confident." Let those words sink in.\n\nNow, bring your hands to your heart. Feel the warmth and power of your own heart. Breathe in that feeling of confidence, and with each exhale, release any feelings of self-doubt.\n\nIn what areas of your life do you want to feel more confident?`},
+                    { title: 'Day 17: Cultivating Joy', content: `Today, we'll use Havening to not only release negative emotions but also to amplify positive ones. We will cultivate the feeling of joy.\n\nClose your eyes and bring to mind a memory of pure joy. It could be from your childhood, a recent event, or a simple moment of happiness. As you recall it, notice the physical sensations of joy in your body.\n\nNow, gently stroke your arms. As you do, imagine that this touch is like turning up the volume on that joyful feeling. Let it expand and fill your whole being.\n\nContinue to stroke, breathing deeply, and say, "I am grateful for this feeling."\n\nRecall a recent moment of joy. How can you hold onto that feeling?`},
+                    { title: 'Day 18: Improving Sleep Quality', content: `Sleep is essential for your well-being. Today, we will use a special Havening session to prepare your mind and body for restful sleep.\n\nLie down in a comfortable position. Gently stroke your arms, and as you do, imagine all the thoughts from your day slowly floating away, like clouds in the sky.\n\nNow, gently massage your face, from your forehead down to your chin. Breathe deeply. With each exhale, imagine your muscles relaxing, your eyelids growing heavy.\n\nContinue to stroke your arms and repeat: "My mind is calm. My body is at peace. I am ready to rest."\n\nWhat is one thought you can release tonight to help you sleep?`},
+                    { title: 'Day 19: Finding Focus', content: `In a world full of distractions, focus can be hard to find. Today, we will use Havening to center your mind and improve your concentration.\n\nFind a quiet place and begin gently stroking your palms. As you do, think of one task you need to focus on. Gently say out loud, "I am focused."\n\nNow, bring your hands to your face and gently massage your forehead. As you do, imagine a clear, bright path leading to the completion of your task. Visualize yourself completing it with ease.\n\nWhat is one task you will use this session to focus on?`},
+                    { title: 'Day 20: Managing Physical Discomfort', content: `Physical discomfort can be emotionally taxing. Today, we'll use Havening to help soothe both your mind and body.\n\nIf you have a location of minor physical discomfort, bring your hand to that area. If not, simply place your hand on your arm. Gently and slowly, stroke the area.\n\nAs you do, breathe deeply, and with each exhale, imagine the discomfort softening and releasing. Repeat to yourself: "I am soothing my body."\n\nWhat is one thing you can do to show your body kindness today?`},
+                    { title: 'Day 21: Your Journey Continues', content: `Congratulations! You have completed your 21-day journey. Today is about reflecting on how far you’ve come and looking forward.\n\nBegin with the full Havening sequence one last time. Stroke your arms, your palms, and your face. As you do, remember the moments of calm you found, the memories you de-linked, and the resilience you built.\n\nNow, bring your hands to rest and take a deep, slow breath. Remember that this power is always with you.\n\nWhat is one new habit or insight you will carry forward from this course?`}
+                ]
+            }
+        ];
+        
+        // --- Audio Generation Functions ---
+
+        /**
+         * Converts a Base64 string to an ArrayBuffer.
+         * @param {string} base64 The Base64 string to decode.
+         * @returns {ArrayBuffer} The decoded ArrayBuffer.
+         */
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        /**
+         * Converts raw PCM audio data into a WAV file Blob.
+         * @param {Int16Array} pcmData The raw PCM audio data.
+         * @param {number} sampleRate The sample rate of the audio.
+         * @returns {Blob} A Blob representing the WAV file.
+         */
+        function pcmToWav(pcmData, sampleRate) {
+            const numChannels = 1;
+            const bitsPerSample = 16;
+            const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+            const blockAlign = numChannels * (bitsPerSample / 8);
+            const dataSize = pcmData.length * (bitsPerSample / 8);
+            const fileSize = 36 + dataSize;
+
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+
+            // RIFF header
+            view.setUint8(0, 'R'.charCodeAt(0));
+            view.setUint8(1, 'I'.charCodeAt(0));
+            view.setUint8(2, 'F'.charCodeAt(0));
+            view.setUint8(3, 'F'.charCodeAt(0));
+            view.setUint32(4, fileSize, true);
+            view.setUint8(8, 'W'.charCodeAt(0));
+            view.setUint8(9, 'A'.charCodeAt(0));
+            view.setUint8(10, 'V'.charCodeAt(0));
+            view.setUint8(11, 'E'.charCodeAt(0));
+
+            // fmt chunk
+            view.setUint8(12, 'f'.charCodeAt(0));
+            view.setUint8(13, 'm'.charCodeAt(0));
+            view.setUint8(14, 't'.charCodeAt(0));
+            view.setUint8(15, ' '.charCodeAt(0));
+            view.setUint32(16, 16, true); // Sub-chunk size
+            view.setUint16(20, 1, true); // Audio format (1 for PCM)
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+
+            // data chunk
+            view.setUint8(36, 'd'.charCodeAt(0));
+            view.setUint8(37, 'a'.charCodeAt(0));
+            view.setUint8(38, 't'.charCodeAt(0));
+            view.setUint8(39, 'a'.charCodeAt(0));
+            view.setUint32(40, dataSize, true);
+
+            // Write PCM data
+            const pcm16 = new Int16Array(buffer, 44);
+            pcm16.set(pcmData);
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+
+        /**
+         * Fetches audio from the Gemini TTS API and returns a playable URL.
+         * @param {string} text The text to convert to speech.
+         * @returns {Promise<string|null>} A promise that resolves to an object URL or null on error.
+         */
+        async function generateAudio(text) {
+             const apiKey = ""; // API key is handled by the environment
+             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            
+             // 1. Clean the text: Remove instructional tags that shouldn't be spoken.
+             const cleanedText = text
+                .replace(/\[.*?\]/g, '') // Removes tags like [Background music begins...]
+                .replace(/\*\*/g, '');    // Removes asterisks for bolding
+
+             // 2. Refined speech prompt for better quality and reliability.
+             const speechPrompt = `Say in a calm, soothing, gentle, and slow voice: ${cleanedText}`;
+
+             // 3. Choose a suitable voice. "Kore" is a good firm, gentle voice.
+             const voiceName = "Kore"; 
+
+             const payload = {
+                 contents: [{
+                     parts: [{ text: speechPrompt }]
+                 }],
+                 generationConfig: {
+                     responseModalities: ["AUDIO"],
+                     speechConfig: {
+                         voiceConfig: {
+                             prebuiltVoiceConfig: { voiceName: voiceName }
+                         }
+                     }
+                 },
+                 model: "gemini-2.5-flash-preview-tts"
+             };
+
+            const maxRetries = 5;
+            let delay = 1000; // 1 second
+
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json(); // Always parse the JSON response
+
+                    if (!response.ok) {
+                        const errorMsg = result?.error?.message || `HTTP status ${response.status}`;
+                        throw new Error(`API Error: ${errorMsg}`);
+                    }
+
+                    const part = result?.candidates?.[0]?.content?.parts?.[0];
+                    const audioData = part?.inlineData?.data;
+                    const mimeType = part?.inlineData?.mimeType;
+
+                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                        if (!sampleRateMatch) {
+                            throw new Error("Sample rate not found in mime type");
+                        }
+                        const sampleRate = parseInt(sampleRateMatch[1], 10);
+                        const pcmData = base64ToArrayBuffer(audioData);
+                        const pcm16 = new Int16Array(pcmData);
+                        const wavBlob = pcmToWav(pcm16, sampleRate);
+                        return URL.createObjectURL(wavBlob); // Success!
+                    } else {
+                         const rejectionReason = result?.candidates?.[0]?.finishReason;
+                         throw new Error(`Audio data not found in response. Reason: ${rejectionReason || 'Unknown'}`);
+                    }
+                } catch (error) {
+                    if (attempt === maxRetries) {
+                        console.error("Error generating audio after all retries:", error.message);
+                        showMessage(`Sorry, the audio could not be generated. Please try again later. Details: ${error.message}`);
+                        return null;
+                    }
+                    console.warn(`Attempt ${attempt} failed. Retrying in ${delay / 1000}s...`);
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2; // Exponential backoff
+                }
+            }
+            return null; // Fallback in case loop finishes unexpectedly
+        }
+
+        // --- Core App Logic ---
+
+        function showSection(sectionId) {
+            landingPage.style.display = 'none';
+            coursePage.style.display = 'none';
+            journalPage.style.display = 'none';
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        function setActiveTab(tabId) {
+            const tabs = [navHome, navCourse, navJournal];
+            tabs.forEach(tab => {
+                tab.classList.remove('text-blue-600', 'font-bold');
+                tab.classList.add('text-gray-600', 'font-semibold');
+            });
+            const currentTab = document.getElementById(tabId);
+            currentTab.classList.remove('text-gray-600', 'font-semibold');
+            currentTab.classList.add('text-blue-600', 'font-bold');
+        }
+
+        async function renderCourseContent() {
+            const currentModule = courseModules[currentModuleIndex];
+            const currentSession = currentModule.sessions[currentSessionIndex];
+            const sessionId = `${currentModuleIndex}-${currentSessionIndex}`;
+
+            courseModuleTitle.textContent = currentModule.title;
+            courseSessionTitle.textContent = currentSession.title;
+            
+            // Clean the script for display by removing markdown-like syntax
+            const displayScript = currentSession.content
+                .replace(/\[.*?\]/g, '') // Remove [tags]
+                .replace(/\*\*/g, '');    // Remove **
+            courseScript.textContent = displayScript;
+
+            // Handle Audio Player State
+            courseAudioPlayer.src = ""; // Clear previous audio
+            courseAudioPlayer.setAttribute('disabled', 'true');
+            audioStatus.textContent = 'Generating audio, please wait...';
+            
+            let audioUrl = audioUrlCache[sessionId];
+            
+            if (!audioUrl) {
+                // Generate audio if not in cache
+                audioUrl = await generateAudio(currentSession.content);
+                if (audioUrl) {
+                     audioUrlCache[sessionId] = audioUrl; // Save to cache
+                }
+            }
+            
+            if (audioUrl) {
+                courseAudioPlayer.src = audioUrl;
+                courseAudioPlayer.removeAttribute('disabled');
+                audioStatus.textContent = 'Audio ready. Press play to listen.';
+                courseAudioPlayer.load();
+            } else {
+                 audioStatus.textContent = 'Audio could not be loaded.';
+            }
+
+
+            const totalSessions = courseModules.reduce((acc, module) => acc + module.sessions.length, 0);
+            const sessionsCompleted = currentModuleIndex > 0 ? courseModules.slice(0, currentModuleIndex).reduce((acc, m) => acc + m.sessions.length, 0) + currentSessionIndex + 1 : currentSessionIndex + 1;
+            courseProgress.textContent = `Progress: Session ${sessionsCompleted} of ${totalSessions}`;
+            nextSessionBtn.textContent = (sessionsCompleted === totalSessions) ? "Complete Course" : "Next Session";
+        }
+
+        function nextSession() {
+            // Revoke the old audio URL from memory to prevent leaks
+            const oldSessionId = `${currentModuleIndex}-${currentSessionIndex}`;
+            if (audioUrlCache[oldSessionId]) {
+                 URL.revokeObjectURL(audioUrlCache[oldSessionId]);
+                 delete audioUrlCache[oldSessionId];
+            }
+
+            const currentModule = courseModules[currentModuleIndex];
+            if (currentSessionIndex < currentModule.sessions.length - 1) {
+                currentSessionIndex++;
+            } else if (currentModuleIndex < courseModules.length - 1) {
+                currentModuleIndex++;
+                currentSessionIndex = 0;
+            } else {
+                showMessage("Congratulations! You have completed the entire course.");
+                return;
+            }
+            renderCourseContent();
+        }
+
+        startCourseBtn.addEventListener('click', () => {
+            showSection('coursePage');
+            setActiveTab('navCourse');
+            renderCourseContent();
+        });
+
+        navHome.addEventListener('click', () => {
+            showSection('landingPage');
+            setActiveTab('navHome');
+        });
+        navCourse.addEventListener('click', () => {
+            showSection('coursePage');
+            setActiveTab('navCourse');
+            renderCourseContent();
+        });
+        navJournal.addEventListener('click', () => {
+            showSection('journalPage');
+            setActiveTab('navJournal');
+        });
+
+        nextSessionBtn.addEventListener('click', nextSession);
+
+        async function initApp() {
+            try {
+                if (Object.keys(firebaseConfig).length > 0) {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                } else {
+                    console.warn('Firebase config is not available. Journaling will be disabled.');
+                    // Disable journal features if no config
+                    navJournal.style.display = 'none';
+                    journalPage.innerHTML = '<p class="text-center text-red-500">Journaling is unavailable: Firebase is not configured.</p>';
+                }
+            } catch (e) {
+                console.error('Failed to initialize Firebase:', e);
+                showMessage('Failed to initialize Firebase.');
+                return;
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    userIdDisplay.textContent = `User ID: ${userId}`;
+                    const collectionPath = `artifacts/${appId}/users/${userId}/journals`;
+                    journalCollectionRef = collection(db, collectionPath);
+                    onSnapshot(journalCollectionRef, (querySnapshot) => {
+                        const entries = [];
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            entries.push({ id: doc.id, timestamp: data.timestamp, content: data.content });
+                        });
+                        entries.sort((a, b) => {
+                            const dateA = a.timestamp instanceof Timestamp ? a.timestamp.toMillis() : new Date(a.timestamp).getTime();
+                            const dateB = b.timestamp instanceof Timestamp ? b.timestamp.toMillis() : new Date(b.timestamp).getTime();
+                            return dateB - dateA;
+                        });
+                        renderJournalEntries(entries);
+                    }, (error) => {
+                        console.error("Error getting documents: ", error);
+                        showMessage("Failed to load journal entries.");
+                    });
+                } else {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Authentication error:", error);
+                        showMessage("Authentication failed.");
+                    }
+                }
+            });
+        }
+        
+        saveBtn.addEventListener('click', async () => {
+            const entryText = journalEntryInput.value.trim();
+            if (entryText === "") {
+                showMessage("Please write something before saving.");
+                return;
+            }
+            if (!journalCollectionRef) {
+                showMessage("Database connection not ready.");
+                return;
+            }
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+            try {
+                await addDoc(journalCollectionRef, { content: entryText, timestamp: new Date() });
+                journalEntryInput.value = '';
+                showMessage('Journal entry saved successfully!');
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                showMessage("Failed to save journal entry.");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Entry';
+            }
+        });
+
+        window.onload = () => {
+            showSection('landingPage');
+            setActiveTab('navHome');
+            initApp();
+        };
+    </script>
+    
+    <nav class="sticky top-0 z-50 bg-white shadow-lg backdrop-blur-sm bg-opacity-80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <span class="text-2xl font-bold text-blue-600">NeuroCalm</span>
+                </div>
+                <div class="flex space-x-4 sm:space-x-8">
+                    <button id="navHome" class="text-blue-600 font-bold transition-colors duration-200">Home</button>
+                    <button id="navCourse" class="text-gray-600 font-semibold transition-colors duration-200">Course</button>
+                    <button id="navJournal" class="text-gray-600 font-semibold transition-colors duration-200">Journal</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <main id="mainContent" class="py-12 px-4 sm:px-6 lg:px-8">
+
+        <div id="landingPage" class="space-y-20">
+            <section class="text-center py-20 bg-blue-50 rounded-3xl shadow-lg relative overflow-hidden">
+                <div class="relative z-10">
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-900 mb-4 leading-tight drop-shadow-md">
+                        Find Your Inner Calm
+                    </h1>
+                    <p class="text-xl sm:text-2xl text-blue-800 mb-8 max-w-2xl mx-auto drop-shadow-md">
+                        A simple, powerful technique for emotional freedom and lasting resilience.
+                    </p>
+                    <button id="startCourseBtn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
+                        Start Your 21-Day Journey
+                    </button>
+                </div>
+            </section>
+
+            <section class="max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">The Challenge We All Face</h2>
+                <p class="text-lg text-gray-600 leading-relaxed mb-8">
+                    In today's fast-paced world, stress, anxiety, and past emotional burdens can feel overwhelming. They can hold us back from living a life of peace and confidence.
+                </p>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3 class="text-xl font-semibold text-gray-700">Daily Stress</h3>
+                        <p class="text-gray-500 mt-2">The constant pressure of work and life.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h3 class="text-xl font-semibold text-gray-700">Lingering Anxiety</h3>
+                        <p class="text-gray-500 mt-2">Old fears that prevent new growth.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <h3 class="text-xl font-semibold text-gray-700">Past Trauma</h3>
+                        <p class="text-gray-500 mt-2">Memories that still hold emotional power.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-white p-10 rounded-3xl shadow-xl">
+                <h2 class="text-3xl sm:text-4xl font-bold text-center text-blue-800 mb-8">How it Works: The Science of NeuroCalm</h2>
+                <div class="flex flex-col md:flex-row items-center space-y-8 md:space-y-0 md:space-x-12">
+                    <div class="md:w-1/2">
+                        <p class="text-lg text-gray-700 leading-relaxed">
+                            The Havening Technique is a psychosensory therapy that uses simple, gentle touch to create a delta wave in the brain. This wave is the same kind of brain wave produced during deep relaxation and REM sleep.
+                        </p>
+                        <ul class="list-disc list-inside mt-4 space-y-2 text-gray-600">
+                            <li>It de-links the emotional charge from a traumatic or stressful memory.</li>
+                            <li>It works by calming the nervous system, creating a feeling of safety.</li>
+                            <li>It reprograms the brain's emotional response to old triggers.</li>
+                        </ul>
+                    </div>
+                    <div class="md:w-1/2 flex items-center justify-center">
+                         <img src="https://placehold.co/400x400/EBF8FF/3B82F6?text=Brainwave\nIllustration" alt="Brainwave Illustration" class="rounded-2xl shadow-lg"/>
+                    </div>
+                </div>
+            </section>
+
+            <section class="max-w-4xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">Hear from Our Users</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <div class="flex items-center mb-4">
+                            <img src="https://placehold.co/64x64/EBF8FF/3B82F6?text=JD" class="w-16 h-16 rounded-full mr-4" alt="Jane Doe"/>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">Jane Doe</h4>
+                                <p class="text-sm text-gray-500">Founder & CEO</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 italic">"This app completely changed my relationship with stress. It's so simple, yet so profound. I feel calmer and more in control than ever before."</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-md">
+                        <div class="flex items-center mb-4">
+                             <img src="https://placehold.co/64x64/EBF8FF/3B82F6?text=JS" class="w-16 h-16 rounded-full mr-4" alt="John Smith"/>
+                            <div>
+                                <h4 class="font-semibold text-gray-800">John Smith</h4>
+                                <p class="text-sm text-gray-500">Creative Director</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 italic">"I was skeptical at first, but after just a few sessions, I felt a shift. The feeling of past anxieties holding me back has truly diminished."</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pricing" class="max-w-4xl mx-auto text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Unlock Your Full Potential</h2>
+                <p class="text-lg text-gray-600 leading-relaxed mb-8">
+                    Choose a plan that fits your journey to emotional freedom.
+                </p>
+                <div class="flex flex-col md:flex-row justify-center space-y-8 md:space-y-0 md:space-x-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-lg flex-1 transform transition-transform duration-300 hover:scale-105">
+                        <h3 class="text-2xl font-bold text-blue-600 mb-2">Monthly</h3>
+                        <p class="text-4xl font-extrabold text-gray-900 mb-4">$9.99<span class="text-lg font-normal text-gray-500">/month</span></p>
+                        <ul class="text-left text-gray-700 space-y-3 mb-8">
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Full 21-day course</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Daily session scripts</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Private journal</li>
+                            <li class="flex items-center opacity-50"><svg class="w-5 h-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>Exclusive advanced modules</li>
+                        </ul>
+                        <a href="https://www.paypal.com/webapps/mpp/subscriptions" target="_blank" class="block w-full text-center bg-blue-600 text-white font-bold py-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300">Subscribe Now</a>
+                    </div>
+                    <div class="bg-blue-600 text-white p-8 rounded-2xl shadow-xl flex-1 transform transition-transform duration-300 hover:scale-105">
+                        <h3 class="text-2xl font-bold mb-2">Annual</h3>
+                        <p class="text-4xl font-extrabold mb-4">$99.99<span class="text-lg font-normal">/year</span></p>
+                        <p class="text-sm italic mb-4 opacity-80">Save over 15%</p>
+                        <ul class="text-left text-white space-y-3 mb-8">
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Full 21-day course</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Daily session scripts</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Private journal</li>
+                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Exclusive advanced modules</li>
+                        </ul>
+                        <a href="https://www.paypal.com/webapps/mpp/subscriptions" target="_blank" class="block w-full text-center bg-white text-blue-600 font-bold py-3 rounded-full shadow-lg hover:bg-gray-100 transition-all duration-300">Subscribe Now</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="coursePage" class="hidden max-w-4xl mx-auto space-y-6">
+            <div class="bg-blue-900 text-white p-6 rounded-t-2xl shadow-lg text-center">
+                <h2 id="courseModuleTitle" class="text-xl font-bold mb-2 opacity-80"></h2>
+                <h3 id="courseSessionTitle" class="text-4xl font-extrabold leading-tight font-lora"></h3>
+                <p id="courseProgress" class="text-sm font-semibold opacity-75 mt-2"></p>
+            </div>
+             <div class="bg-white p-6 rounded-b-2xl shadow-xl">
+                <audio id="courseAudioPlayer" controls class="w-full" disabled></audio>
+                <p id="audioStatus" class="text-center text-sm text-gray-500 mt-2 italic">Loading audio...</p>
+            </div>
+            <div class="bg-stone-50 p-8 rounded-2xl shadow-inner scroll-container max-h-[50vh] overflow-y-auto border border-stone-200">
+                <pre id="courseScript" class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap font-lora"></pre>
+            </div>
+            <button id="nextSessionBtn" class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
+                Next Session
+            </button>
+        </div>
+
+        <div id="journalPage" class="hidden">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto">
+                <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">Daily Journal</h1>
+                <p class="text-center text-gray-500 mb-2">Reflect on your emotional journey and track your progress.</p>
+                <p id="userIdDisplay" class="text-center text-xs text-gray-400 mb-8 truncate"></p>
+                <div class="mb-8">
+                    <textarea id="journalEntryInput" rows="6" placeholder="How are you feeling today? What did you learn from your session?"
+                        class="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 resize-none placeholder-gray-400 text-gray-700"></textarea>
+                    <button id="saveBtn"
+                        class="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        Save Entry
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <h2 class="text-xl font-bold text-blue-800 mb-4">Past Entries</h2>
+                    <div id="journalEntriesContainer" class="scroll-container max-h-[50vh] overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="messageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
+            <p id="messageText" class="text-lg text-gray-800 mb-4"></p>
+            <button id="messageCloseBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-full hover:bg-blue-700 transition-colors duration-200">
+                OK
+            </button>
+        </div>
+    </div>
+</body>
+
+</html>
