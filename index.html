@@ -4,27 +4,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeuroCalm: The Emotional Freedom App</title>
+    <title>NeuroCalm — Soul Tribe Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
-        
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f0f4f8;
-            color: #1a202c;
+            color: #0f172a;
         }
 
-        .scroll-container {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        .scroll-container::-webkit-scrollbar {
+        .hidden-by-default {
             display: none;
         }
-        
+
+        .breathe-orb {
+            width: 120px;
+            height: 120px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.95), rgba(16, 185, 129, 0.85));
+            box-shadow: 0 20px 45px rgba(14, 165, 233, 0.12),
+                inset 0 -6px 18px rgba(255, 255, 255, 0.06);
+            transition: transform 850ms ease-in-out, opacity 850ms ease-in-out;
+        }
+
+        @keyframes inhale-exhale {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.9;
+            }
+
+            50% {
+                transform: scale(1.08);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(0.9);
+                opacity: 0.9;
+            }
+        }
+
+        .orb-animate {
+            animation: inhale-exhale 4000ms ease-in-out infinite;
+        }
+
         .font-lora {
             font-family: 'Lora', serif;
         }
@@ -37,85 +65,227 @@
     </style>
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-slate-50">
 
+    <!-- ✅ NAVIGATION -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="h-9 w-9 rounded-xl bg-sky-500 grid place-content-center text-white font-bold">NC</div>
+                <div class="font-semibold">NeuroCalm</div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="navHome" class="text-gray-600 font-semibold">Home</button>
+                <button id="navCourse" class="text-gray-600 font-semibold">Course</button>
+                <button id="navJournal" class="text-gray-600 font-semibold">Journal</button>
+                <button id="navQuick" class="text-gray-600 font-semibold">QuickPause</button>
+                <button id="navSound" class="text-gray-600 font-semibold">Soundscapes</button>
+                <button id="navCheckin" class="text-gray-600 font-semibold">Check-in</button>
+                <button id="navCommunity" class="text-gray-600 font-semibold">Community</button>
+                <button id="navPricing" class="text-gray-600 font-semibold">Pricing</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-10">
+        <!-- ✅ SECTIONS -->
+        <section id="landingPage" class="space-y-20">
+            <div class="text-center py-20 bg-blue-50 rounded-3xl shadow-lg relative overflow-hidden">
+                <div class="relative z-10">
+                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-900 mb-4 leading-tight drop-shadow-md">
+                        Find Your Inner Calm
+                    </h1>
+                    <p class="text-xl sm:text-2xl text-blue-800 mb-8 max-w-2xl mx-auto drop-shadow-md">
+                        A simple, powerful technique for emotional freedom and lasting resilience.
+                    </p>
+                    <button id="startCourseBtn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
+                        Start Your 21-Day Journey
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="coursePage" class="hidden-by-default max-w-4xl mx-auto space-y-6">
+             <div class="bg-blue-900 text-white p-6 rounded-t-2xl shadow-lg text-center">
+                <h2 id="courseModuleTitle" class="text-xl font-bold mb-2 opacity-80"></h2>
+                <h3 id="courseSessionTitle" class="text-4xl font-extrabold leading-tight font-lora"></h3>
+                <p id="courseProgress" class="text-sm font-semibold opacity-75 mt-2"></p>
+            </div>
+             <div class="bg-white p-6 rounded-b-2xl shadow-xl">
+                <audio id="courseAudioPlayer" controls class="w-full" disabled></audio>
+                <p id="audioStatus" class="text-center text-sm text-gray-500 mt-2 italic">Loading audio...</p>
+            </div>
+            <div class="bg-stone-50 p-8 rounded-2xl shadow-inner max-h-[50vh] overflow-y-auto border border-stone-200">
+                <pre id="courseScript" class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap font-lora"></pre>
+            </div>
+            <button id="nextSessionBtn" class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
+                Next Session
+            </button>
+        </section>
+
+        <section id="journalPage" class="hidden-by-default">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto">
+                <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">Cloud Journal</h1>
+                <p class="text-center text-gray-500 mb-2">Reflect on your emotional journey. Your entries are saved to your account.</p>
+                <p id="userIdDisplay" class="text-center text-xs text-gray-400 mb-8 truncate"></p>
+                <div class="mb-8">
+                    <textarea id="journalEntryInput" rows="6" placeholder="How are you feeling today? What did you learn from your session?"
+                        class="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 resize-none placeholder-gray-400 text-gray-700"></textarea>
+                    <button id="saveJournalBtn"
+                        class="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        Save Entry to Cloud
+                    </button>
+                </div>
+                <div class="space-y-6">
+                    <h2 class="text-xl font-bold text-blue-800 mb-4">Past Entries</h2>
+                    <div id="journalEntriesContainer" class="max-h-[50vh] overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QuickPause -->
+        <section id="quickPauseSection" class="hidden-by-default card mb-8 p-6 bg-white rounded-xl shadow">
+            <div class="flex gap-6 items-center">
+                <div>
+                    <div id="breatheOrb" class="breathe-orb orb-animate"></div>
+                </div>
+                <div class="flex-1">
+                    <h3 class="text-2xl font-bold">QuickPause™</h3>
+                    <p class="text-gray-600 mt-2">Breathing resets — Box, 4-7-8, or Calm breathing.</p>
+                    <div class="mt-4 flex gap-3">
+                        <button id="qpBox" class="px-4 py-2 rounded-xl bg-sky-600 text-white">Box</button>
+                        <button id="qp478" class="px-4 py-2 rounded-xl bg-slate-200">4-7-8</button>
+                        <button id="qpCalm" class="px-4 py-2 rounded-xl bg-slate-200">Calm</button>
+                        <button id="qpStop" class="px-4 py-2 rounded-xl bg-red-100 text-red-700">Stop</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Soundscapes -->
+        <section id="soundscapesSection" class="hidden-by-default card mb-8 p-6 bg-white rounded-xl shadow">
+            <h3 class="text-2xl font-bold">Soundscapes</h3>
+            <p class="text-gray-600 mt-2">Alpha, Theta, Delta, Beta modes.</p>
+            <div class="mt-4 flex gap-3">
+                <button data-mode="alpha" class="px-4 py-2 rounded-xl bg-sky-100 text-sky-700">Alpha</button>
+                <button data-mode="theta" class="px-4 py-2 rounded-xl bg-sky-100 text-sky-700">Theta</button>
+                <button data-mode="delta" class="px-4 py-2 rounded-xl bg-sky-100 text-sky-700">Delta</button>
+                <button data-mode="beta" class="px-4 py-2 rounded-xl bg-sky-100 text-sky-700">Beta</button>
+            </div>
+            <div class="mt-4 flex items-center gap-3">
+                <button id="scPlay" class="px-4 py-2 rounded-xl bg-sky-600 text-white">Play</button>
+                <button id="scStop" class="px-4 py-2 rounded-xl bg-slate-200">Stop</button>
+                <label class="ml-3">Volume
+                    <input id="scVolume" type="range" min="0" max="1" step="0.01" value="0.35" />
+                </label>
+                <div class="ml-auto text-sm text-gray-500" id="scModeLabel">Mode: —</div>
+            </div>
+        </section>
+
+        <!-- Check-in -->
+        <section id="checkinSection" class="hidden-by-default card mb-8 p-6 bg-white rounded-xl shadow">
+            <h3 class="text-2xl font-bold">Daily Check-in</h3>
+            <textarea id="quickJournal" rows="4" class="w-full p-3 border rounded-xl mt-2"
+                placeholder="Write a line or two..."></textarea>
+            <div class="mt-3 flex gap-3">
+                <button id="saveQuick" class="px-4 py-2 rounded-xl bg-sky-600 text-white">Save local</button>
+            </div>
+            <div id="localEntries" class="mt-3 space-y-2"></div>
+        </section>
+
+        <!-- Community -->
+        <section id="communitySection" class="hidden-by-default card mb-8 p-6 bg-white rounded-xl shadow">
+            <h3 class="text-2xl font-bold">Community</h3>
+            <textarea id="commText" class="w-full mt-3 p-3 rounded-xl border"
+                placeholder="Share encouragement..."></textarea>
+            <div class="mt-3 flex gap-3">
+                <button id="saveComm" class="px-4 py-2 rounded-xl bg-sky-600 text-white">Save</button>
+                <button id="clearComm" class="px-4 py-2 rounded-xl bg-red-100 text-red-700">Clear</button>
+            </div>
+            <div id="commFeed" class="mt-4 space-y-2"></div>
+        </section>
+
+        <!-- Pricing -->
+        <section id="pricingSection" class="hidden-by-default card mb-8 p-6 bg-white rounded-xl shadow">
+            <h3 class="text-2xl font-bold">Pricing</h3>
+            <p class="text-gray-600 mt-2">Choose your plan.</p>
+            <div class="grid md:grid-cols-3 gap-6 mt-6">
+                <div class="p-6 rounded-2xl border">
+                    <h4 class="font-semibold">Free</h4>
+                    <p class="text-2xl font-bold mt-2">$0</p>
+                    <button class="mt-4 w-full px-4 py-2 bg-slate-200 rounded-xl">Start Free</button>
+                </div>
+                <div class="p-6 rounded-2xl border">
+                    <h4 class="font-semibold">Plus</h4>
+                    <p class="text-2xl font-bold mt-2">$9.99/mo</p>
+                    <!-- PayPal One-time -->
+                    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" class="mt-4">
+                        <input type="hidden" name="cmd" value="_xclick">
+                        <input type="hidden" name="business" value="YOUR_PAYPAL_EMAIL@example.com">
+                        <input type="hidden" name="item_name" value="NeuroCalm Plus (one-time)">
+                        <input type="hidden" name="amount" value="9.99">
+                        <input type="hidden" name="currency_code" value="USD">
+                        <input type="submit" value="Buy Now" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl cursor-pointer">
+                    </form>
+                </div>
+                <div class="p-6 rounded-2xl border">
+                    <h4 class="font-semibold">Pro</h4>
+                    <p class="text-2xl font-bold mt-2">$14.99/mo</p>
+                    <!-- Stripe placeholder -->
+                    <a href="https://checkout.stripe.com/pay/REPLACE" target="_blank"
+                        class="block w-full text-center mt-4 px-4 py-2 bg-slate-800 text-white border rounded-xl">Stripe Checkout</a>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Message Modal -->
+     <div id="messageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-50 hidden">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
+            <p id="messageText" class="text-lg text-gray-800 mb-4"></p>
+            <button id="messageCloseBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-full hover:bg-blue-700 transition-colors duration-200">
+                OK
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ✅ SCRIPTS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
+        import { getFirestore, doc, addDoc, onSnapshot, collection, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Setup ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let app;
-        let db;
-        let auth;
-        let userId = null;
-        let journalCollectionRef = null;
-
-        const landingPage = document.getElementById('landingPage');
-        const coursePage = document.getElementById('coursePage');
-        const journalPage = document.getElementById('journalPage');
-        const userIdDisplay = document.getElementById('userIdDisplay');
-        const startCourseBtn = document.getElementById('startCourseBtn');
+        let app, db, auth, userId = null, journalCollectionRef = null;
+        
+        // --- DOM Elements ---
+        const messageModal = document.getElementById('messageModal');
+        const messageText = document.getElementById('messageText');
+        const messageCloseBtn = document.getElementById('messageCloseBtn');
         const courseProgress = document.getElementById('courseProgress');
         const courseScript = document.getElementById('courseScript');
         const courseAudioPlayer = document.getElementById('courseAudioPlayer');
         const audioStatus = document.getElementById('audioStatus');
-        const nextSessionBtn = document.getElementById('nextSessionBtn');
         const courseModuleTitle = document.getElementById('courseModuleTitle');
         const courseSessionTitle = document.getElementById('courseSessionTitle');
-        const navHome = document.getElementById('navHome');
-        const navCourse = document.getElementById('navCourse');
-        const navJournal = document.getElementById('navJournal');
-
         const journalEntryInput = document.getElementById('journalEntryInput');
-        const saveBtn = document.getElementById('saveBtn');
         const journalEntriesContainer = document.getElementById('journalEntriesContainer');
-        const messageModal = document.getElementById('messageModal');
-        const messageText = document.getElementById('messageText');
-        const messageCloseBtn = document.getElementById('messageCloseBtn');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const orb = document.getElementById('breatheOrb');
 
+        // --- App State ---
         let currentModuleIndex = 0;
         let currentSessionIndex = 0;
-        let audioUrlCache = {}; // Cache for generated audio URLs
+        let audioUrlCache = {};
+        const LOCAL_STORAGE_KEY = 'neurocalm_local_v2';
+        let localData = { journal: [], comm: [] };
 
-        function showMessage(message) {
-            messageText.textContent = message;
-            messageModal.classList.remove('hidden');
-        }
-
-        messageCloseBtn.onclick = () => {
-            messageModal.classList.add('hidden');
-        };
-
-        function formatDate(timestamp) {
-            const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            return date.toLocaleDateString(undefined, options);
-        }
-
-        function renderJournalEntries(entries) {
-            journalEntriesContainer.innerHTML = '';
-            if (entries.length === 0) {
-                journalEntriesContainer.innerHTML = '<p class="text-gray-400 text-center py-8">Your journal is empty. Write your first entry!</p>';
-                return;
-            }
-            entries.forEach(entry => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'bg-white p-6 rounded-2xl shadow-md mb-4 hover:shadow-lg transition-shadow duration-300';
-                entryDiv.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="text-lg font-semibold text-blue-600">${formatDate(entry.timestamp)}</h3>
-                        <p class="text-sm text-gray-500">ID: ${entry.id.substring(0, 8)}...</p>
-                    </div>
-                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">${entry.content}</p>
-                `;
-                journalEntriesContainer.appendChild(entryDiv);
-            });
-        }
-
+        // --- Course Content ---
         const courseModules = [
             {
                 title: 'Module 1: The Foundation of Calm',
@@ -155,542 +325,279 @@
             }
         ];
         
-        // --- Audio Generation Functions ---
+        // --- Utility Functions ---
+        function showMessage(message) {
+            messageText.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+        messageCloseBtn.onclick = () => messageModal.classList.add('hidden');
 
-        /**
-         * Converts a Base64 string to an ArrayBuffer.
-         * @param {string} base64 The Base64 string to decode.
-         * @returns {ArrayBuffer} The decoded ArrayBuffer.
-         */
+        function formatDate(timestamp) {
+            const date = timestamp instanceof Timestamp ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleString();
+        }
+        
+        // --- Navigation ---
+        function showSection(id) {
+            document.querySelectorAll('main section').forEach(sec => sec.style.display = 'none');
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'block';
+        }
+
+        document.querySelectorAll('nav button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.id.replace('nav', '').toLowerCase();
+                const sectionMap = {
+                    home: 'landingPage',
+                    course: 'coursePage',
+                    journal: 'journalPage',
+                    quick: 'quickPauseSection',
+                    sound: 'soundscapesSection',
+                    checkin: 'checkinSection',
+                    community: 'communitySection',
+                    pricing: 'pricingSection'
+                };
+                if (sectionMap[id]) {
+                    showSection(sectionMap[id]);
+                    // Re-render course content when navigating to the course page
+                    if (id === 'course') {
+                        renderCourseContent();
+                    }
+                }
+            });
+        });
+
+        // --- Audio Generation ---
         function base64ToArrayBuffer(base64) {
             const binaryString = window.atob(base64);
             const len = binaryString.length;
             const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
+            for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); }
             return bytes.buffer;
         }
 
-        /**
-         * Converts raw PCM audio data into a WAV file Blob.
-         * @param {Int16Array} pcmData The raw PCM audio data.
-         * @param {number} sampleRate The sample rate of the audio.
-         * @returns {Blob} A Blob representing the WAV file.
-         */
         function pcmToWav(pcmData, sampleRate) {
-            const numChannels = 1;
-            const bitsPerSample = 16;
+            const numChannels = 1, bitsPerSample = 16;
             const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
             const blockAlign = numChannels * (bitsPerSample / 8);
             const dataSize = pcmData.length * (bitsPerSample / 8);
-            const fileSize = 36 + dataSize;
-
             const buffer = new ArrayBuffer(44 + dataSize);
             const view = new DataView(buffer);
-
-            // RIFF header
-            view.setUint8(0, 'R'.charCodeAt(0));
-            view.setUint8(1, 'I'.charCodeAt(0));
-            view.setUint8(2, 'F'.charCodeAt(0));
-            view.setUint8(3, 'F'.charCodeAt(0));
-            view.setUint32(4, fileSize, true);
-            view.setUint8(8, 'W'.charCodeAt(0));
-            view.setUint8(9, 'A'.charCodeAt(0));
-            view.setUint8(10, 'V'.charCodeAt(0));
-            view.setUint8(11, 'E'.charCodeAt(0));
-
-            // fmt chunk
-            view.setUint8(12, 'f'.charCodeAt(0));
-            view.setUint8(13, 'm'.charCodeAt(0));
-            view.setUint8(14, 't'.charCodeAt(0));
-            view.setUint8(15, ' '.charCodeAt(0));
-            view.setUint32(16, 16, true); // Sub-chunk size
-            view.setUint16(20, 1, true); // Audio format (1 for PCM)
-            view.setUint16(22, numChannels, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, byteRate, true);
-            view.setUint16(32, blockAlign, true);
-            view.setUint16(34, bitsPerSample, true);
-
-            // data chunk
-            view.setUint8(36, 'd'.charCodeAt(0));
-            view.setUint8(37, 'a'.charCodeAt(0));
-            view.setUint8(38, 't'.charCodeAt(0));
-            view.setUint8(39, 'a'.charCodeAt(0));
+            // RIFF header, fmt chunk, data chunk... (omitted for brevity, but it's the full WAV header logic)
+            view.setUint8(0, 'R'.charCodeAt(0)); view.setUint8(1, 'I'.charCodeAt(0)); view.setUint8(2, 'F'.charCodeAt(0)); view.setUint8(3, 'F'.charCodeAt(0));
+            view.setUint32(4, 36 + dataSize, true);
+            view.setUint8(8, 'W'.charCodeAt(0)); view.setUint8(9, 'A'.charCodeAt(0)); view.setUint8(10, 'V'.charCodeAt(0)); view.setUint8(11, 'E'.charCodeAt(0));
+            view.setUint8(12, 'f'.charCodeAt(0)); view.setUint8(13, 'm'.charCodeAt(0)); view.setUint8(14, 't'.charCodeAt(0)); view.setUint8(15, ' '.charCodeAt(0));
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true);
+            view.setUint8(36, 'd'.charCodeAt(0)); view.setUint8(37, 'a'.charCodeAt(0)); view.setUint8(38, 't'.charCodeAt(0)); view.setUint8(39, 'a'.charCodeAt(0));
             view.setUint32(40, dataSize, true);
-
-            // Write PCM data
-            const pcm16 = new Int16Array(buffer, 44);
-            pcm16.set(pcmData);
-
+            new Int16Array(buffer, 44).set(pcmData);
             return new Blob([view], { type: 'audio/wav' });
         }
-
-
-        /**
-         * Fetches audio from the Gemini TTS API and returns a playable URL.
-         * @param {string} text The text to convert to speech.
-         * @returns {Promise<string|null>} A promise that resolves to an object URL or null on error.
-         */
+        
         async function generateAudio(text) {
-             const apiKey = ""; // API key is handled by the environment
+             const apiKey = "";
              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-            
-             // 1. Clean the text: Remove instructional tags that shouldn't be spoken.
-             const cleanedText = text
-                .replace(/\[.*?\]/g, '') // Removes tags like [Background music begins...]
-                .replace(/\*\*/g, '');    // Removes asterisks for bolding
-
-             // 2. Refined speech prompt for better quality and reliability.
+             const cleanedText = text.replace(/\[.*?\]/g, '').replace(/\*\*/g, '');
              const speechPrompt = `Say in a calm, soothing, gentle, and slow voice: ${cleanedText}`;
-
-             // 3. Choose a suitable voice. "Kore" is a good firm, gentle voice.
-             const voiceName = "Kore"; 
-
-             const payload = {
-                 contents: [{
-                     parts: [{ text: speechPrompt }]
-                 }],
-                 generationConfig: {
-                     responseModalities: ["AUDIO"],
-                     speechConfig: {
-                         voiceConfig: {
-                             prebuiltVoiceConfig: { voiceName: voiceName }
-                         }
-                     }
-                 },
-                 model: "gemini-2.5-flash-preview-tts"
-             };
-
-            const maxRetries = 5;
-            let delay = 1000; // 1 second
-
-            for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await response.json(); // Always parse the JSON response
-
-                    if (!response.ok) {
-                        const errorMsg = result?.error?.message || `HTTP status ${response.status}`;
-                        throw new Error(`API Error: ${errorMsg}`);
-                    }
-
-                    const part = result?.candidates?.[0]?.content?.parts?.[0];
-                    const audioData = part?.inlineData?.data;
-                    const mimeType = part?.inlineData?.mimeType;
-
-                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
-                        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-                        if (!sampleRateMatch) {
-                            throw new Error("Sample rate not found in mime type");
-                        }
-                        const sampleRate = parseInt(sampleRateMatch[1], 10);
-                        const pcmData = base64ToArrayBuffer(audioData);
-                        const pcm16 = new Int16Array(pcmData);
-                        const wavBlob = pcmToWav(pcm16, sampleRate);
-                        return URL.createObjectURL(wavBlob); // Success!
-                    } else {
-                         const rejectionReason = result?.candidates?.[0]?.finishReason;
-                         throw new Error(`Audio data not found in response. Reason: ${rejectionReason || 'Unknown'}`);
-                    }
-                } catch (error) {
-                    if (attempt === maxRetries) {
-                        console.error("Error generating audio after all retries:", error.message);
-                        showMessage(`Sorry, the audio could not be generated. Please try again later. Details: ${error.message}`);
-                        return null;
-                    }
-                    console.warn(`Attempt ${attempt} failed. Retrying in ${delay / 1000}s...`);
-                    await new Promise(res => setTimeout(res, delay));
-                    delay *= 2; // Exponential backoff
-                }
-            }
-            return null; // Fallback in case loop finishes unexpectedly
+             const payload = { contents: [{ parts: [{ text: speechPrompt }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } }, model: "gemini-2.5-flash-preview-tts" };
+             try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+                if (audioData && mimeType?.startsWith("audio/")) {
+                    const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                    const pcm16 = new Int16Array(base64ToArrayBuffer(audioData));
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    return URL.createObjectURL(wavBlob);
+                } else { throw new Error('Audio data not found in response.'); }
+             } catch (error) {
+                 console.error("Error generating audio:", error);
+                 showMessage(`Audio could not be generated. Please try again later.`);
+                 return null;
+             }
         }
 
-        // --- Core App Logic ---
-
-        function showSection(sectionId) {
-            landingPage.style.display = 'none';
-            coursePage.style.display = 'none';
-            journalPage.style.display = 'none';
-            document.getElementById(sectionId).style.display = 'block';
-        }
-
-        function setActiveTab(tabId) {
-            const tabs = [navHome, navCourse, navJournal];
-            tabs.forEach(tab => {
-                tab.classList.remove('text-blue-600', 'font-bold');
-                tab.classList.add('text-gray-600', 'font-semibold');
-            });
-            const currentTab = document.getElementById(tabId);
-            currentTab.classList.remove('text-gray-600', 'font-semibold');
-            currentTab.classList.add('text-blue-600', 'font-bold');
-        }
-
+        // --- Course Logic ---
         async function renderCourseContent() {
-            const currentModule = courseModules[currentModuleIndex];
-            const currentSession = currentModule.sessions[currentSessionIndex];
+            const session = courseModules[currentModuleIndex].sessions[currentSessionIndex];
             const sessionId = `${currentModuleIndex}-${currentSessionIndex}`;
-
-            courseModuleTitle.textContent = currentModule.title;
-            courseSessionTitle.textContent = currentSession.title;
-            
-            // Clean the script for display by removing markdown-like syntax
-            const displayScript = currentSession.content
-                .replace(/\[.*?\]/g, '') // Remove [tags]
-                .replace(/\*\*/g, '');    // Remove **
-            courseScript.textContent = displayScript;
-
-            // Handle Audio Player State
-            courseAudioPlayer.src = ""; // Clear previous audio
+            courseModuleTitle.textContent = courseModules[currentModuleIndex].title;
+            courseSessionTitle.textContent = session.title;
+            courseScript.textContent = session.content.replace(/\[.*?\]/g, '').replace(/\*\*/g, '');
+            courseAudioPlayer.src = "";
             courseAudioPlayer.setAttribute('disabled', 'true');
             audioStatus.textContent = 'Generating audio, please wait...';
             
-            let audioUrl = audioUrlCache[sessionId];
-            
-            if (!audioUrl) {
-                // Generate audio if not in cache
-                audioUrl = await generateAudio(currentSession.content);
-                if (audioUrl) {
-                     audioUrlCache[sessionId] = audioUrl; // Save to cache
-                }
-            }
-            
+            let audioUrl = audioUrlCache[sessionId] || await generateAudio(session.content);
             if (audioUrl) {
+                audioUrlCache[sessionId] = audioUrl;
                 courseAudioPlayer.src = audioUrl;
                 courseAudioPlayer.removeAttribute('disabled');
                 audioStatus.textContent = 'Audio ready. Press play to listen.';
-                courseAudioPlayer.load();
-            } else {
-                 audioStatus.textContent = 'Audio could not be loaded.';
-            }
+            } else { audioStatus.textContent = 'Audio could not be loaded.'; }
 
-
-            const totalSessions = courseModules.reduce((acc, module) => acc + module.sessions.length, 0);
-            const sessionsCompleted = currentModuleIndex > 0 ? courseModules.slice(0, currentModuleIndex).reduce((acc, m) => acc + m.sessions.length, 0) + currentSessionIndex + 1 : currentSessionIndex + 1;
+            const totalSessions = courseModules.reduce((acc, m) => acc + m.sessions.length, 0);
+            const sessionsCompleted = courseModules.slice(0, currentModuleIndex).reduce((acc, m) => acc + m.sessions.length, 0) + currentSessionIndex + 1;
             courseProgress.textContent = `Progress: Session ${sessionsCompleted} of ${totalSessions}`;
-            nextSessionBtn.textContent = (sessionsCompleted === totalSessions) ? "Complete Course" : "Next Session";
+            document.getElementById('nextSessionBtn').textContent = (sessionsCompleted === totalSessions) ? "Complete Course" : "Next Session";
         }
 
         function nextSession() {
-            // Revoke the old audio URL from memory to prevent leaks
             const oldSessionId = `${currentModuleIndex}-${currentSessionIndex}`;
-            if (audioUrlCache[oldSessionId]) {
-                 URL.revokeObjectURL(audioUrlCache[oldSessionId]);
-                 delete audioUrlCache[oldSessionId];
-            }
-
-            const currentModule = courseModules[currentModuleIndex];
-            if (currentSessionIndex < currentModule.sessions.length - 1) {
-                currentSessionIndex++;
-            } else if (currentModuleIndex < courseModules.length - 1) {
-                currentModuleIndex++;
-                currentSessionIndex = 0;
-            } else {
-                showMessage("Congratulations! You have completed the entire course.");
-                return;
-            }
+            if (audioUrlCache[oldSessionId]) { URL.revokeObjectURL(audioUrlCache[oldSessionId]); delete audioUrlCache[oldSessionId]; }
+            if (currentSessionIndex < courseModules[currentModuleIndex].sessions.length - 1) { currentSessionIndex++; }
+            else if (currentModuleIndex < courseModules.length - 1) { currentModuleIndex++; currentSessionIndex = 0; }
+            else { showMessage("Congratulations! You have completed the entire course."); return; }
             renderCourseContent();
         }
 
-        startCourseBtn.addEventListener('click', () => {
-            showSection('coursePage');
-            setActiveTab('navCourse');
-            renderCourseContent();
-        });
+        // --- Firebase (Cloud) Journal ---
+        function renderFirebaseJournal(entries) {
+            journalEntriesContainer.innerHTML = '';
+            if (entries.length === 0) { journalEntriesContainer.innerHTML = '<p class="text-gray-400 text-center py-8">Your cloud journal is empty.</p>'; return; }
+            entries.sort((a, b) => b.timestamp.toMillis() - a.timestamp.toMillis());
+            entries.forEach(entry => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'bg-white p-6 rounded-2xl shadow-md mb-4';
+                entryDiv.innerHTML = `<div class="flex justify-between items-start mb-2"><h3 class="text-lg font-semibold text-blue-600">${formatDate(entry.timestamp)}</h3></div><p class="text-gray-700 leading-relaxed whitespace-pre-wrap">${entry.content}</p>`;
+                journalEntriesContainer.appendChild(entryDiv);
+            });
+        }
+        
+        async function saveFirebaseJournal() {
+            const entryText = journalEntryInput.value.trim();
+            if (entryText === "" || !journalCollectionRef) return;
+            this.disabled = true; this.textContent = 'Saving...';
+            try {
+                await addDoc(journalCollectionRef, { content: entryText, timestamp: new Date() });
+                journalEntryInput.value = '';
+                showMessage('Journal entry saved to the cloud!');
+            } catch (e) { console.error("Error adding document: ", e); showMessage("Failed to save entry."); }
+            finally { this.disabled = false; this.textContent = 'Save Entry to Cloud'; }
+        }
 
-        navHome.addEventListener('click', () => {
-            showSection('landingPage');
-            setActiveTab('navHome');
-        });
-        navCourse.addEventListener('click', () => {
-            showSection('coursePage');
-            setActiveTab('navCourse');
-            renderCourseContent();
-        });
-        navJournal.addEventListener('click', () => {
-            showSection('journalPage');
-            setActiveTab('navJournal');
-        });
+        // --- Local Storage Features ---
+        function loadLocalData() {
+            try { localData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || localData; } catch { }
+        }
+        function saveLocalData() { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(localData)); }
 
-        nextSessionBtn.addEventListener('click', nextSession);
+        // Local Check-in
+        function renderLocalJournal() {
+            const c = document.getElementById('localEntries');
+            c.innerHTML = '';
+            for (let e of localData.journal.slice(-10).reverse()) {
+                const div = document.createElement('div');
+                div.className = 'p-2 rounded bg-slate-100 text-sm';
+                div.textContent = new Date(e.ts).toLocaleString() + " — " + e.text;
+                c.appendChild(div);
+            }
+        }
+        document.getElementById('saveQuick').onclick = () => {
+            const txt = document.getElementById('quickJournal').value.trim();
+            if (!txt) return;
+            localData.journal.push({ ts: Date.now(), text: txt.replace(/</g, "&lt;") });
+            saveLocalData(); renderLocalJournal(); document.getElementById('quickJournal').value = '';
+        };
 
-        async function initApp() {
+        // Local Community Feed
+        function renderComm() {
+            const c = document.getElementById('commFeed'); c.innerHTML = '';
+            for (let e of localData.comm.slice(-10).reverse()) {
+                const div = document.createElement('div');
+                div.className = 'p-2 rounded bg-slate-100 text-sm';
+                div.textContent = new Date(e.ts).toLocaleString() + " — " + e.text;
+                c.appendChild(div);
+            }
+        }
+        document.getElementById('saveComm').onclick = () => {
+            const txt = document.getElementById('commText').value.trim();
+            if (!txt) return;
+            localData.comm.push({ ts: Date.now(), text: txt.replace(/</g, "&lt;") });
+            saveLocalData(); renderComm(); document.getElementById('commText').value = '';
+        };
+        document.getElementById('clearComm').onclick = () => { localData.comm = []; saveLocalData(); renderComm(); };
+
+        // --- Soundscapes (binaural) ---
+        class Binaural {
+            constructor() { this.ctx = null; this.gain = null; this.left = null; this.right = null; this.mode = 'alpha'; }
+            ensure() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (!this.gain) { this.gain = this.ctx.createGain(); this.gain.gain.value = 0.35; this.gain.connect(this.ctx.destination); } }
+            params(mode) { return { alpha: { base: 200, beat: 10 }, theta: { base: 160, beat: 5 }, delta: { base: 110, beat: 2 }, beta: { base: 250, beat: 18 } }[mode]; }
+            start() {
+                this.ensure(); this.stop(); const p = this.params(this.mode);
+                this.left = this.ctx.createOscillator(); this.right = this.ctx.createOscillator();
+                this.left.type = this.right.type = 'sine';
+                this.left.frequency.value = p.base - p.beat / 2; this.right.frequency.value = p.base + p.beat / 2;
+                const panL = this.ctx.createStereoPanner(); panL.pan.value = -1; const panR = this.ctx.createStereoPanner(); panR.pan.value = 1;
+                this.left.connect(panL).connect(this.gain); this.right.connect(panR).connect(this.gain);
+                this.left.start(); this.right.start();
+            }
+            stop() { this.left?.stop(); this.right?.stop(); this.left = this.right = null; }
+        }
+        const soundEngine = new Binaural();
+        
+        // --- Event Listeners ---
+        document.getElementById('startCourseBtn').addEventListener('click', () => { showSection('coursePage'); renderCourseContent(); });
+        document.getElementById('nextSessionBtn').addEventListener('click', nextSession);
+        document.getElementById('saveJournalBtn').addEventListener('click', saveFirebaseJournal);
+        document.getElementById('qpBox').onclick = () => { orb.classList.add('orb-animate'); orb.style.animationDuration = "4000ms"; };
+        document.getElementById('qp478').onclick = () => { orb.classList.add('orb-animate'); orb.style.animationDuration = "7000ms"; };
+        document.getElementById('qpCalm').onclick = () => { orb.classList.add('orb-animate'); orb.style.animationDuration = "5200ms"; };
+        document.getElementById('qpStop').onclick = () => orb.classList.remove('orb-animate');
+        document.querySelectorAll('#soundscapesSection [data-mode]').forEach(btn => {
+            btn.onclick = () => { soundEngine.mode = btn.dataset.mode; document.getElementById('scModeLabel').textContent = "Mode: " + btn.dataset.mode; };
+        });
+        document.getElementById('scPlay').onclick = () => soundEngine.start();
+        document.getElementById('scStop').onclick = () => soundEngine.stop();
+        document.getElementById('scVolume').oninput = e => { if (soundEngine.gain) soundEngine.gain.gain.value = Number(e.target.value); };
+
+        // --- App Initialization ---
+        async function initFirebase() {
             try {
                 if (Object.keys(firebaseConfig).length > 0) {
-                    app = initializeApp(firebaseConfig);
-                    db = getFirestore(app);
-                    auth = getAuth(app);
-                } else {
-                    console.warn('Firebase config is not available. Journaling will be disabled.');
-                    // Disable journal features if no config
-                    navJournal.style.display = 'none';
-                    journalPage.innerHTML = '<p class="text-center text-red-500">Journaling is unavailable: Firebase is not configured.</p>';
-                }
-            } catch (e) {
-                console.error('Failed to initialize Firebase:', e);
-                showMessage('Failed to initialize Firebase.');
-                return;
-            }
+                    app = initializeApp(firebaseConfig); db = getFirestore(app); auth = getAuth(app);
+                } else { document.getElementById('navJournal').style.display = 'none'; return; }
+            } catch (e) { console.error('Firebase init failed:', e); return; }
 
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     userId = user.uid;
                     userIdDisplay.textContent = `User ID: ${userId}`;
-                    const collectionPath = `artifacts/${appId}/users/${userId}/journals`;
-                    journalCollectionRef = collection(db, collectionPath);
-                    onSnapshot(journalCollectionRef, (querySnapshot) => {
-                        const entries = [];
-                        querySnapshot.forEach((doc) => {
-                            const data = doc.data();
-                            entries.push({ id: doc.id, timestamp: data.timestamp, content: data.content });
-                        });
-                        entries.sort((a, b) => {
-                            const dateA = a.timestamp instanceof Timestamp ? a.timestamp.toMillis() : new Date(a.timestamp).getTime();
-                            const dateB = b.timestamp instanceof Timestamp ? b.timestamp.toMillis() : new Date(b.timestamp).getTime();
-                            return dateB - dateA;
-                        });
-                        renderJournalEntries(entries);
-                    }, (error) => {
-                        console.error("Error getting documents: ", error);
-                        showMessage("Failed to load journal entries.");
-                    });
+                    journalCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/journals`);
+                    onSnapshot(journalCollectionRef, (snap) => {
+                        const entries = snap.docs.map(doc => doc.data());
+                        renderFirebaseJournal(entries);
+                    }, (err) => console.error("Journal snapshot error: ", err));
                 } else {
                     try {
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (error) {
-                        console.error("Authentication error:", error);
-                        showMessage("Authentication failed.");
-                    }
+                        if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                        else await signInAnonymously(auth);
+                    } catch (error) { console.error("Auth error:", error); }
                 }
             });
         }
         
-        saveBtn.addEventListener('click', async () => {
-            const entryText = journalEntryInput.value.trim();
-            if (entryText === "") {
-                showMessage("Please write something before saving.");
-                return;
-            }
-            if (!journalCollectionRef) {
-                showMessage("Database connection not ready.");
-                return;
-            }
-            saveBtn.disabled = true;
-            saveBtn.textContent = 'Saving...';
-            try {
-                await addDoc(journalCollectionRef, { content: entryText, timestamp: new Date() });
-                journalEntryInput.value = '';
-                showMessage('Journal entry saved successfully!');
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                showMessage("Failed to save journal entry.");
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Save Entry';
-            }
-        });
-
         window.onload = () => {
             showSection('landingPage');
-            setActiveTab('navHome');
-            initApp();
+            initFirebase();
+            loadLocalData();
+            renderLocalJournal();
+            renderComm();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(console.error);
+            }
         };
+
     </script>
-    
-    <nav class="sticky top-0 z-50 bg-white shadow-lg backdrop-blur-sm bg-opacity-80">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex-shrink-0 flex items-center">
-                    <span class="text-2xl font-bold text-blue-600">NeuroCalm</span>
-                </div>
-                <div class="flex space-x-4 sm:space-x-8">
-                    <button id="navHome" class="text-blue-600 font-bold transition-colors duration-200">Home</button>
-                    <button id="navCourse" class="text-gray-600 font-semibold transition-colors duration-200">Course</button>
-                    <button id="navJournal" class="text-gray-600 font-semibold transition-colors duration-200">Journal</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-    
-    <main id="mainContent" class="py-12 px-4 sm:px-6 lg:px-8">
-
-        <div id="landingPage" class="space-y-20">
-            <section class="text-center py-20 bg-blue-50 rounded-3xl shadow-lg relative overflow-hidden">
-                <div class="relative z-10">
-                    <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold text-blue-900 mb-4 leading-tight drop-shadow-md">
-                        Find Your Inner Calm
-                    </h1>
-                    <p class="text-xl sm:text-2xl text-blue-800 mb-8 max-w-2xl mx-auto drop-shadow-md">
-                        A simple, powerful technique for emotional freedom and lasting resilience.
-                    </p>
-                    <button id="startCourseBtn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
-                        Start Your 21-Day Journey
-                    </button>
-                </div>
-            </section>
-
-            <section class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">The Challenge We All Face</h2>
-                <p class="text-lg text-gray-600 leading-relaxed mb-8">
-                    In today's fast-paced world, stress, anxiety, and past emotional burdens can feel overwhelming. They can hold us back from living a life of peace and confidence.
-                </p>
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-md">
-                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <h3 class="text-xl font-semibold text-gray-700">Daily Stress</h3>
-                        <p class="text-gray-500 mt-2">The constant pressure of work and life.</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-md">
-                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <h3 class="text-xl font-semibold text-gray-700">Lingering Anxiety</h3>
-                        <p class="text-gray-500 mt-2">Old fears that prevent new growth.</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-md">
-                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        <h3 class="text-xl font-semibold text-gray-700">Past Trauma</h3>
-                        <p class="text-gray-500 mt-2">Memories that still hold emotional power.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="bg-white p-10 rounded-3xl shadow-xl">
-                <h2 class="text-3xl sm:text-4xl font-bold text-center text-blue-800 mb-8">How it Works: The Science of NeuroCalm</h2>
-                <div class="flex flex-col md:flex-row items-center space-y-8 md:space-y-0 md:space-x-12">
-                    <div class="md:w-1/2">
-                        <p class="text-lg text-gray-700 leading-relaxed">
-                            The Havening Technique is a psychosensory therapy that uses simple, gentle touch to create a delta wave in the brain. This wave is the same kind of brain wave produced during deep relaxation and REM sleep.
-                        </p>
-                        <ul class="list-disc list-inside mt-4 space-y-2 text-gray-600">
-                            <li>It de-links the emotional charge from a traumatic or stressful memory.</li>
-                            <li>It works by calming the nervous system, creating a feeling of safety.</li>
-                            <li>It reprograms the brain's emotional response to old triggers.</li>
-                        </ul>
-                    </div>
-                    <div class="md:w-1/2 flex items-center justify-center">
-                         <img src="https://placehold.co/400x400/EBF8FF/3B82F6?text=Brainwave\nIllustration" alt="Brainwave Illustration" class="rounded-2xl shadow-lg"/>
-                    </div>
-                </div>
-            </section>
-
-            <section class="max-w-4xl mx-auto">
-                <h2 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-8">Hear from Our Users</h2>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="bg-white p-6 rounded-2xl shadow-md">
-                        <div class="flex items-center mb-4">
-                            <img src="https://placehold.co/64x64/EBF8FF/3B82F6?text=JD" class="w-16 h-16 rounded-full mr-4" alt="Jane Doe"/>
-                            <div>
-                                <h4 class="font-semibold text-gray-800">Jane Doe</h4>
-                                <p class="text-sm text-gray-500">Founder & CEO</p>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 italic">"This app completely changed my relationship with stress. It's so simple, yet so profound. I feel calmer and more in control than ever before."</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-md">
-                        <div class="flex items-center mb-4">
-                             <img src="https://placehold.co/64x64/EBF8FF/3B82F6?text=JS" class="w-16 h-16 rounded-full mr-4" alt="John Smith"/>
-                            <div>
-                                <h4 class="font-semibold text-gray-800">John Smith</h4>
-                                <p class="text-sm text-gray-500">Creative Director</p>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 italic">"I was skeptical at first, but after just a few sessions, I felt a shift. The feeling of past anxieties holding me back has truly diminished."</p>
-                    </div>
-                </div>
-            </section>
-
-            <section id="pricing" class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">Unlock Your Full Potential</h2>
-                <p class="text-lg text-gray-600 leading-relaxed mb-8">
-                    Choose a plan that fits your journey to emotional freedom.
-                </p>
-                <div class="flex flex-col md:flex-row justify-center space-y-8 md:space-y-0 md:space-x-8">
-                    <div class="bg-white p-8 rounded-2xl shadow-lg flex-1 transform transition-transform duration-300 hover:scale-105">
-                        <h3 class="text-2xl font-bold text-blue-600 mb-2">Monthly</h3>
-                        <p class="text-4xl font-extrabold text-gray-900 mb-4">$9.99<span class="text-lg font-normal text-gray-500">/month</span></p>
-                        <ul class="text-left text-gray-700 space-y-3 mb-8">
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Full 21-day course</li>
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Daily session scripts</li>
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Private journal</li>
-                            <li class="flex items-center opacity-50"><svg class="w-5 h-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>Exclusive advanced modules</li>
-                        </ul>
-                        <a href="https://www.paypal.com/webapps/mpp/subscriptions" target="_blank" class="block w-full text-center bg-blue-600 text-white font-bold py-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300">Subscribe Now</a>
-                    </div>
-                    <div class="bg-blue-600 text-white p-8 rounded-2xl shadow-xl flex-1 transform transition-transform duration-300 hover:scale-105">
-                        <h3 class="text-2xl font-bold mb-2">Annual</h3>
-                        <p class="text-4xl font-extrabold mb-4">$99.99<span class="text-lg font-normal">/year</span></p>
-                        <p class="text-sm italic mb-4 opacity-80">Save over 15%</p>
-                        <ul class="text-left text-white space-y-3 mb-8">
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Full 21-day course</li>
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Daily session scripts</li>
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Private journal</li>
-                            <li class="flex items-center"><svg class="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>Exclusive advanced modules</li>
-                        </ul>
-                        <a href="https://www.paypal.com/webapps/mpp/subscriptions" target="_blank" class="block w-full text-center bg-white text-blue-600 font-bold py-3 rounded-full shadow-lg hover:bg-gray-100 transition-all duration-300">Subscribe Now</a>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <div id="coursePage" class="hidden max-w-4xl mx-auto space-y-6">
-            <div class="bg-blue-900 text-white p-6 rounded-t-2xl shadow-lg text-center">
-                <h2 id="courseModuleTitle" class="text-xl font-bold mb-2 opacity-80"></h2>
-                <h3 id="courseSessionTitle" class="text-4xl font-extrabold leading-tight font-lora"></h3>
-                <p id="courseProgress" class="text-sm font-semibold opacity-75 mt-2"></p>
-            </div>
-             <div class="bg-white p-6 rounded-b-2xl shadow-xl">
-                <audio id="courseAudioPlayer" controls class="w-full" disabled></audio>
-                <p id="audioStatus" class="text-center text-sm text-gray-500 mt-2 italic">Loading audio...</p>
-            </div>
-            <div class="bg-stone-50 p-8 rounded-2xl shadow-inner scroll-container max-h-[50vh] overflow-y-auto border border-stone-200">
-                <pre id="courseScript" class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap font-lora"></pre>
-            </div>
-            <button id="nextSessionBtn" class="w-full bg-blue-600 text-white font-bold py-4 px-8 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 transform hover:scale-105">
-                Next Session
-            </button>
-        </div>
-
-        <div id="journalPage" class="hidden">
-            <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl mx-auto">
-                <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">Daily Journal</h1>
-                <p class="text-center text-gray-500 mb-2">Reflect on your emotional journey and track your progress.</p>
-                <p id="userIdDisplay" class="text-center text-xs text-gray-400 mb-8 truncate"></p>
-                <div class="mb-8">
-                    <textarea id="journalEntryInput" rows="6" placeholder="How are you feeling today? What did you learn from your session?"
-                        class="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 resize-none placeholder-gray-400 text-gray-700"></textarea>
-                    <button id="saveBtn"
-                        class="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105">
-                        Save Entry
-                    </button>
-                </div>
-                <div class="space-y-6">
-                    <h2 class="text-xl font-bold text-blue-800 mb-4">Past Entries</h2>
-                    <div id="journalEntriesContainer" class="scroll-container max-h-[50vh] overflow-y-auto">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <div id="messageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-50 hidden">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full text-center">
-            <p id="messageText" class="text-lg text-gray-800 mb-4"></p>
-            <button id="messageCloseBtn" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-full hover:bg-blue-700 transition-colors duration-200">
-                OK
-            </button>
-        </div>
-    </div>
 </body>
-
 </html>
+
+
+
+
 
