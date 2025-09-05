@@ -8,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3B82F6" />
+
+    <<script 
+  src="https://www.paypal.com/sdk/js?client-id=BAAMnZhCt1obNcjaxd7h5fsnW7KyFhGcwcU8Ebzj2aE5Mf_RrW3gz9sEZUxGy39nOLRz6WWkrECHjXuS6c&components=hosted-buttons&disable-funding=venmo&currency=USD">
+</script> -->
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
@@ -219,15 +224,18 @@
                 <div class="p-6 rounded-2xl border">
                     <h4 class="font-semibold">Plus</h4>
                     <p class="text-2xl font-bold mt-2">$9.99/mo</p>
-                    <!-- PayPal One-time -->
-                    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" class="mt-4">
-                        <input type="hidden" name="cmd" value="_xclick">
-                        <input type="hidden" name="business" value="joyousmoments@gmail.com">
-                        <input type="hidden" name="item_name" value="NeuroCalm Plus (one-time)">
-                        <input type="hidden" name="amount" value="9.99">
-                        <input type="hidden" name="currency_code" value="USD">
-                        <input type="submit" value="Buy Now" class="w-full px-4 py-2 bg-blue-600 text-white rounded-xl cursor-pointer">
-                    </form>
+                    
+                    <<div id="paypal-container-SM97S7PPBVFZN"></div>
+<script>
+  paypal.HostedButtons({
+    hostedButtonId: "SM97S7PPBVFZN",
+  }).render("#paypal-container-SM97S7PPBVFZN")
+</script>>
+                    <!-- This will replace the old PayPal form. It's often a <div> that the Part 1 script uses to render the button. -->
+                    <div id="payment-button-container" class="mt-4">
+                        <!-- For example: <div id="paypal-button-container"></div> -->
+                    </div>
+
                 </div>
                 <div class="p-6 rounded-2xl border">
                     <h4 class="font-semibold">Pro</h4>
@@ -426,7 +434,7 @@
         async function renderCourseContent() {
             const session = courseModules[currentModuleIndex].sessions[currentSessionIndex];
             const sessionId = `${currentModuleIndex}-${currentSessionIndex}`;
-            courseModuleTitle.textContent = courseModules[currentModuleIndex].title;
+            courseModuleTitle.textContent = courseModules[currentModule-index].title;
             courseSessionTitle.textContent = session.title;
             courseScript.textContent = session.content.replace(/\[.*?\]/g, '').replace(/\*\*/g, '');
             courseAudioPlayer.src = "";
@@ -596,6 +604,7 @@
     </script>
 </body>
 </html>
+
 
 
 
