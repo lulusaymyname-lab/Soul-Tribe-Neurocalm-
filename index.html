@@ -9,9 +9,9 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#3B82F6" />
 
-    <<script 
-  src="https://www.paypal.com/sdk/js?client-id=BAAMnZhCt1obNcjaxd7h5fsnW7KyFhGcwcU8Ebzj2aE5Mf_RrW3gz9sEZUxGy39nOLRz6WWkrECHjXuS6c&components=hosted-buttons&disable-funding=venmo&currency=USD">
-</script> -->
+    <!-- ✅ PAYPAL SCRIPT (PART 1) -->
+    <!-- Replace YOUR_CLIENT_ID with your actual PayPal Client ID -->
+    <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -225,16 +225,9 @@
                     <h4 class="font-semibold">Plus</h4>
                     <p class="text-2xl font-bold mt-2">$9.99/mo</p>
                     
-                    <<div id="paypal-container-SM97S7PPBVFZN"></div>
-<script>
-  paypal.HostedButtons({
-    hostedButtonId: "SM97S7PPBVFZN",
-  }).render("#paypal-container-SM97S7PPBVFZN")
-</script>>
-                    <!-- This will replace the old PayPal form. It's often a <div> that the Part 1 script uses to render the button. -->
-                    <div id="payment-button-container" class="mt-4">
-                        <!-- For example: <div id="paypal-button-container"></div> -->
-                    </div>
+                    <!-- ✅ PAYPAL BUTTON CONTAINER (PART 2) -->
+                    <!-- This div is where the PayPal button will be rendered. -->
+                    <div id="paypal-button-container" class="mt-4"></div>
 
                 </div>
                 <div class="p-6 rounded-2xl border">
@@ -602,7 +595,40 @@
         };
 
     </script>
+    
+    <!-- ✅ PAYPAL BUTTON RENDERING SCRIPT -->
+    <script>
+        paypal.Buttons({
+            // Sets up the transaction when a payment button is clicked
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'NeuroCalm Plus Subscription',
+                        amount: {
+                            value: '9.99' // The amount for the transaction
+                        }
+                    }]
+                });
+            },
+            // Finalize the transaction after buyer approval
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderData) {
+                    // Successful capture! 
+                    console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                    // You can show a success message to the buyer
+                    alert('Transaction completed by ' + orderData.payer.name.given_name);
+                });
+            },
+            onError: function (err) {
+                // Log the error for debugging
+                console.error('An error occurred with the PayPal button:', err);
+                 // You can show an error message to the buyer
+                alert('An error occurred with your payment. Please try again.');
+            }
+        }).render('#paypal-button-container');
+    </script>
 </body>
+
 </html>
 
 
